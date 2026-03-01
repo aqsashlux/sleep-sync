@@ -1,3 +1,5 @@
+**Language: English | [Español](README.es.md) | [Português](README.pt.md) | [中文](README.zh.md)**
+
 # Sleep Sync
 
 A desktop app that helps you gradually fix your sleep schedule using circadian phase advance techniques.
@@ -108,7 +110,6 @@ Open [http://localhost:5173](http://localhost:5173) and sign in with your Google
 sleep-sync/
 ├── server.js              # Express orchestrator (~35 lines)
 ├── config.js              # Centralized config (ports, DB path, JWT, OAuth)
-├── .env.example           # Environment variable template
 ├── db/
 │   ├── schema.sql         # SQLite DDL (4 tables)
 │   ├── database.js        # SQLite init + getDB() singleton
