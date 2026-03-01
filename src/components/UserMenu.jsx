@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 export default function UserMenu() {
     const { user, isGuest, logout } = useAuth();
@@ -8,24 +9,8 @@ export default function UserMenu() {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
 
-    // Close the dropdown when clicking outside or pressing Escape.
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                setIsOpen(false);
-            }
-        };
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') setIsOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen]);
+    const handleClose = useCallback(() => setIsOpen(false), []);
+    useClickOutside(menuRef, isOpen ? handleClose : null);
 
     if (!user) return null;
 
@@ -156,19 +141,6 @@ export default function UserMenu() {
                 </div>
             )}
 
-            {/* Inline keyframes for dropdown entrance */}
-            <style>{`
-                @keyframes fadeSlideIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-4px) scale(0.97);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-            `}</style>
         </div>
     );
 }

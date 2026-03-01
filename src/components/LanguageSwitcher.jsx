@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 const LANGUAGES = [
     { code: 'en', label: 'English', flag: 'EN' },
@@ -15,23 +16,8 @@ export default function LanguageSwitcher() {
 
     const currentLang = LANGUAGES.find(l => l.code === i18n.language) || LANGUAGES[0];
 
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                setIsOpen(false);
-            }
-        };
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') setIsOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen]);
+    const handleClose = useCallback(() => setIsOpen(false), []);
+    useClickOutside(menuRef, isOpen ? handleClose : null);
 
     const changeLanguage = (code) => {
         i18n.changeLanguage(code);

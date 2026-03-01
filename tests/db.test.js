@@ -8,7 +8,7 @@
 
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { setupTestDB, getDB } from './test-setup.js';
+import { setupTestDB } from './test-setup.js';
 
 describe('Database initialization (initDatabase)', () => {
     let db;

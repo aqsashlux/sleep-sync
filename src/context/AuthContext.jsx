@@ -1,10 +1,34 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
-import { API_BASE, TOKEN_KEY } from '../lib/api.js';
+import { api, TOKEN_KEY } from '../lib/api.js';
+import { GUEST_DATA_KEY } from '../lib/constants.js';
 
-const GUEST_DATA_KEY = 'sync_guest_data';
+/**
+ * @typedef {Object} AuthUser
+ * @property {string} displayName - User's display name
+ * @property {string} email       - User's email address
+ * @property {string} avatarUrl   - URL to user's avatar image
+ */
 
-export const AuthContext = createContext(null);
+/**
+ * @typedef {Object} AuthContextValue
+ * @property {AuthUser|null} user            - Current user or null if unauthenticated
+ * @property {string|null}   token           - JWT token or null
+ * @property {boolean}       isLoading       - Whether auth state is being verified
+ * @property {boolean}       isAuthenticated - Whether the user is logged in (or guest)
+ * @property {boolean}       isGuest         - Whether the user is in guest mode
+ * @property {(credential: string) => Promise<{token: string, user: AuthUser}>} loginWithGoogle - Google OAuth login
+ * @property {() => void}    loginAsGuest    - Enter guest mode
+ * @property {() => void}    logout          - Clear session and redirect to login
+ */
 
+/** @type {import('react').Context<AuthContextValue|null>} */
+export const AuthContext = createContext(null); // eslint-disable-line react-refresh/only-export-components
+
+/**
+ * Provides authentication state and actions to the component tree.
+ * Verifies stored JWT on mount, supports Google OAuth and guest mode.
+ * @param {{ children: import('react').ReactNode }} props
+ */
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
@@ -16,19 +40,13 @@ export function AuthProvider({ children }) {
     // Verify the stored token once on mount (and whenever the token value changes).
     useEffect(() => {
         if (!token) {
-            setIsLoading(false);
+            setIsLoading(false); // eslint-disable-line react-hooks/set-state-in-effect
             return;
         }
 
         let cancelled = false;
 
-        fetch(`${API_BASE}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then(res => {
-                if (!res.ok) throw new Error('Invalid token');
-                return res.json();
-            })
+        api.get('/api/auth/me')
             .then(data => {
                 if (!cancelled) setUser(data.user);
             })
@@ -49,18 +67,7 @@ export function AuthProvider({ children }) {
     }, [token]);
 
     const loginWithGoogle = useCallback(async (credential) => {
-        const res = await fetch(`${API_BASE}/api/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ credential }),
-        });
-
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || 'Login failed');
-        }
-
-        const data = await res.json();
+        const data = await api.post('/api/auth/google', { credential });
         localStorage.setItem(TOKEN_KEY, data.token);
         setToken(data.token);
         setUser(data.user);
